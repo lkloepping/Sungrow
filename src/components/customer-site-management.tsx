@@ -1,10 +1,11 @@
-import { useState } from 'react'
-import { Users, MapPin, Package, AlertTriangle, CheckCircle, XCircle, ArrowRight, Building2 } from 'lucide-react'
+import { useState, useMemo } from 'react'
+import { Users, MapPin, Package, AlertTriangle, CheckCircle, XCircle, ArrowRight, Building2, Map } from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { mockCustomers, mockDevices, mockDeployments, Customer, Site, Device } from '@/data/mockData'
+import { mockCustomers, mockDevices, mockDeployments, Customer, Site, Device, mockSites } from '@/data/mockData'
+import SiteMap from './site-map'
 
 export default function CustomerSiteManagement() {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer>(mockCustomers[0])
@@ -40,12 +41,48 @@ export default function CustomerSiteManagement() {
     }
   }
 
+  // Get all sites across all customers
+  const allSites = useMemo(() => {
+    return mockSites
+  }, [])
+
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6">
       <div>
         <h2 className="text-2xl font-semibold text-slate-50 mb-2">Customer & Site Management</h2>
         <p className="text-slate-400">Monitor customer installations, sites, and device configurations</p>
       </div>
+
+      {/* Geographic Site Map */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Map className="h-5 w-5 text-blue-500" />
+                Site Locations Across the US
+              </CardTitle>
+              <CardDescription>Interactive map showing all customer sites and their status</CardDescription>
+            </div>
+            <Badge variant="secondary">{allSites.length} Sites</Badge>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <SiteMap 
+            sites={allSites} 
+            customers={mockCustomers}
+            onSiteClick={(site) => {
+              setSelectedSite(site)
+              const customer = mockCustomers.find(c => c.sites.some(s => s.siteId === site.siteId))
+              if (customer) setSelectedCustomer(customer)
+              // Scroll to site details
+              setTimeout(() => {
+                document.getElementById('selected-site')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+              }, 100)
+            }}
+          />
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Customer List */}
@@ -267,7 +304,7 @@ export default function CustomerSiteManagement() {
 
           {/* Selected Site Details */}
           {selectedSite && (
-            <Card className="border-blue-500/50">
+            <Card className="border-blue-500/50" id="selected-site">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center gap-2">
