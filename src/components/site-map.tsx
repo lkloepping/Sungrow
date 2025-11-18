@@ -84,7 +84,7 @@ export default function SiteMap({ sites, customers, onSiteClick }: SiteMapProps)
   }, [sites])
 
   return (
-    <div className="relative w-full h-[600px] rounded-lg overflow-hidden border border-slate-800">
+    <div className="relative w-full h-[500px] rounded-lg overflow-hidden border border-slate-800">
       <MapContainer
         center={mapCenter}
         zoom={4}

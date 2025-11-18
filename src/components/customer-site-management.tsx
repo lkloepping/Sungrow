@@ -1,15 +1,17 @@
 import { useState, useMemo } from 'react'
-import { Users, MapPin, Package, AlertTriangle, CheckCircle, XCircle, ArrowRight, Building2, Map } from 'lucide-react'
+import { Users, MapPin, Package, AlertTriangle, CheckCircle, XCircle, ArrowRight, Building2, Map, Calendar } from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { mockCustomers, mockDevices, mockDeployments, Customer, Site, Device, mockSites, mockProjects } from '@/data/mockData'
 import SiteMapWrapper from './site-map-wrapper'
+import DeploymentPlanning from './deployment-planning'
 
 export default function CustomerSiteManagement() {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer>(mockCustomers[0])
   const [selectedSite, setSelectedSite] = useState<Site | null>(null)
+  const [activeTab, setActiveTab] = useState<'overview' | 'planning'>('overview')
 
   const getCustomerDeviceCount = (customerId: string) => {
     return mockDevices.filter(d => d.customerId === customerId).length
@@ -70,154 +72,157 @@ export default function CustomerSiteManagement() {
         <p className="text-slate-400">Monitor customer installations, sites, and device configurations</p>
       </div>
 
-      {/* Geographic Site Map */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <Map className="h-5 w-5 text-blue-500" />
-                Site Locations Across the US
-              </CardTitle>
-              <CardDescription>Interactive map showing all customer sites and their status</CardDescription>
-            </div>
-            <Badge variant="secondary">{allSites.length} Sites</Badge>
+      {/* Tabs */}
+      <div className="flex gap-2 border-b border-slate-800">
+        <button
+          onClick={() => setActiveTab('overview')}
+          className={`px-4 py-2 font-medium transition-colors border-b-2 ${
+            activeTab === 'overview'
+              ? 'border-blue-500 text-blue-500'
+              : 'border-transparent text-slate-400 hover:text-slate-300'
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <Map className="h-4 w-4" />
+            Site Overview
           </div>
-        </CardHeader>
-        <CardContent>
-          <SiteMapWrapper 
-            sites={allSites} 
-            customers={mockCustomers}
-            onSiteClick={(site) => {
-              setSelectedSite(site)
-              const customer = mockCustomers.find(c => c.sites.some(s => s.siteId === site.siteId))
-              if (customer) setSelectedCustomer(customer)
-              // Scroll to site details
-              setTimeout(() => {
-                document.getElementById('selected-site')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
-              }, 100)
-            }}
-          />
-        </CardContent>
-      </Card>
+        </button>
+        <button
+          onClick={() => setActiveTab('planning')}
+          className={`px-4 py-2 font-medium transition-colors border-b-2 ${
+            activeTab === 'planning'
+              ? 'border-blue-500 text-blue-500'
+              : 'border-transparent text-slate-400 hover:text-slate-300'
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            Deployment Planning
+          </div>
+        </button>
+      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Customer List */}
-        <Card className="lg:col-span-1">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Customers ({mockCustomers.length})
-            </CardTitle>
-            <CardDescription>Select a customer to view details</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {mockCustomers.map((customer) => (
-                <button
-                  key={customer.customerId}
-                  onClick={() => {
-                    setSelectedCustomer(customer)
-                    setSelectedSite(null)
+      {activeTab === 'planning' && <DeploymentPlanning />}
+
+      {activeTab === 'overview' && (
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Left Side - Map (1/3) */}
+          <div className="lg:w-1/3">
+            <Card className="sticky top-6">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Map className="h-4 w-4 text-blue-500" />
+                    Site Locations
+                  </CardTitle>
+                  <Badge variant="secondary" className="text-xs">{allSites.length}</Badge>
+                </div>
+                <CardDescription className="text-xs">Interactive map of all sites</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <SiteMapWrapper 
+                  sites={allSites} 
+                  customers={mockCustomers}
+                  onSiteClick={(site) => {
+                    setSelectedSite(site)
+                    const customer = mockCustomers.find(c => c.sites.some(s => s.siteId === site.siteId))
+                    if (customer) setSelectedCustomer(customer)
+                    // Scroll to site details
+                    setTimeout(() => {
+                      document.getElementById('selected-site')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+                    }, 100)
                   }}
-                  className={`w-full text-left p-4 rounded-lg border transition-colors ${
-                    selectedCustomer.customerId === customer.customerId
-                      ? 'bg-blue-950/50 border-blue-500'
-                      : 'bg-slate-950 border-slate-800 hover:border-slate-700'
-                  }`}
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <p className="text-slate-200 font-medium">{customer.name}</p>
-                    {customer.complianceGaps.length > 0 && (
-                      <AlertTriangle className="h-4 w-4 text-yellow-500" />
-                    )}
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div>
-                      <p className="text-slate-500">Sites</p>
-                      <p className="text-slate-300">{getCustomerSiteCount(customer.customerId)}</p>
-                    </div>
-                    <div>
-                      <p className="text-slate-500">Devices</p>
-                      <p className="text-slate-300">{getCustomerDeviceCount(customer.customerId)}</p>
-                    </div>
-                  </div>
-                  <div className="mt-2">
-                    <p className="text-slate-500 text-xs">Projects: {Array.isArray(customer.projects) ? customer.projects.length : 0}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                />
+              </CardContent>
+            </Card>
+          </div>
 
-        {/* Customer Details */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Customer Overview */}
-          <Card>
-            <CardHeader>
+          {/* Right Side - Details (2/3) */}
+          <div className="flex-1 lg:w-2/3 space-y-4">
+            {/* Customer List */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Users className="h-4 w-4" />
+                  Customers ({mockCustomers.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                  {mockCustomers.map((customer) => (
+                    <button
+                      key={customer.customerId}
+                      onClick={() => {
+                        setSelectedCustomer(customer)
+                        setSelectedSite(null)
+                      }}
+                      className={`w-full text-left p-2 rounded border transition-colors ${
+                        selectedCustomer.customerId === customer.customerId
+                          ? 'bg-blue-950/50 border-blue-500'
+                          : 'bg-slate-950 border-slate-800 hover:border-slate-700'
+                      }`}
+                    >
+                      <p className="text-slate-200 font-medium text-xs mb-1">{customer.name}</p>
+                      <div className="flex items-center gap-2 text-[10px] text-slate-400">
+                        <span>{getCustomerSiteCount(customer.customerId)} sites</span>
+                        <span>•</span>
+                        <span>{getCustomerDeviceCount(customer.customerId)} devices</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Customer Details */}
+            {/* Customer Overview */}
+            <Card>
+            <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  <Building2 className="h-5 w-5" />
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Building2 className="h-4 w-4" />
                   {selectedCustomer.name}
                 </CardTitle>
                 {selectedCustomer.complianceGaps.filter(gap => gap.status === 'Open').length > 0 && (
-                  <Badge variant="warning">
-                    {selectedCustomer.complianceGaps.filter(gap => gap.status === 'Open').length} Compliance Gaps
+                  <Badge variant="warning" className="text-xs">
+                    {selectedCustomer.complianceGaps.filter(gap => gap.status === 'Open').length} Gaps
                   </Badge>
                 )}
               </div>
-              <CardDescription>Customer ID: {selectedCustomer.customerId}</CardDescription>
+              <CardDescription className="text-xs">ID: {selectedCustomer.customerId}</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-3 gap-4">
-                <div className="bg-slate-950 p-4 rounded-lg">
-                  <p className="text-slate-400 text-sm mb-1">Total Sites</p>
-                  <p className="text-2xl font-semibold text-slate-50">{getCustomerSiteCount(selectedCustomer.customerId)}</p>
+            <CardContent className="space-y-3 pt-0">
+              <div className="grid grid-cols-3 gap-2">
+                <div className="bg-slate-950 p-2 rounded">
+                  <p className="text-slate-400 text-[10px] mb-0.5">Sites</p>
+                  <p className="text-lg font-semibold text-slate-50">{getCustomerSiteCount(selectedCustomer.customerId)}</p>
                 </div>
-                <div className="bg-slate-950 p-4 rounded-lg">
-                  <p className="text-slate-400 text-sm mb-1">Total Devices</p>
-                  <p className="text-2xl font-semibold text-slate-50">{getCustomerDeviceCount(selectedCustomer.customerId)}</p>
+                <div className="bg-slate-950 p-2 rounded">
+                  <p className="text-slate-400 text-[10px] mb-0.5">Devices</p>
+                  <p className="text-lg font-semibold text-slate-50">{getCustomerDeviceCount(selectedCustomer.customerId)}</p>
                 </div>
-                <div className="bg-slate-950 p-4 rounded-lg">
-                  <p className="text-slate-400 text-sm mb-1">Projects</p>
-                  <p className="text-2xl font-semibold text-slate-50">{Array.isArray(selectedCustomer.projects) ? selectedCustomer.projects.length : 0}</p>
-                </div>
-              </div>
-
-              {/* Configuration State */}
-              <div>
-                <p className="text-slate-400 text-sm mb-2">Current Configuration State</p>
-                <div className="bg-slate-950 p-3 rounded">
-                  <p className="text-slate-200 text-sm">{selectedCustomer.currentConfigurationState}</p>
+                <div className="bg-slate-950 p-2 rounded">
+                  <p className="text-slate-400 text-[10px] mb-0.5">Projects</p>
+                  <p className="text-lg font-semibold text-slate-50">{Array.isArray(selectedCustomer.projects) ? selectedCustomer.projects.length : 0}</p>
                 </div>
               </div>
 
               {/* Compliance Gaps */}
               {selectedCustomer.complianceGaps.length > 0 && (
                 <div>
-                  <p className="text-slate-400 text-sm mb-2">Compliance Gaps</p>
-                  <div className="space-y-2">
+                  <p className="text-slate-400 text-xs mb-1.5">Compliance Gaps</p>
+                  <div className="space-y-1.5">
                     {selectedCustomer.complianceGaps.map((gap) => (
                       <div
                         key={gap.gapId}
-                        className={`p-3 rounded border ${
+                        className={`p-2 rounded border flex items-center justify-between ${
                           gap.status === 'Open'
                             ? 'bg-yellow-950/30 border-yellow-500/30'
                             : 'bg-green-950/30 border-green-500/30'
                         }`}
                       >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <p className="text-slate-200 text-sm">{gap.description}</p>
-                          </div>
-                          {gap.status === 'Open' ? (
-                            <XCircle className="h-4 w-4 text-yellow-500 ml-2" />
-                          ) : (
-                            <CheckCircle className="h-4 w-4 text-green-500 ml-2" />
-                          )}
-                        </div>
-                        <Badge variant={gap.status === 'Open' ? 'warning' : 'success'} className="mt-2 text-xs">
+                        <p className="text-slate-200 text-xs flex-1">{gap.description}</p>
+                        <Badge variant={gap.status === 'Open' ? 'warning' : 'success'} className="text-[10px] ml-2">
                           {gap.status}
                         </Badge>
                       </div>
@@ -228,33 +233,32 @@ export default function CustomerSiteManagement() {
             </CardContent>
           </Card>
 
-          {/* Projects */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Projects ({getCustomerProjects(selectedCustomer.customerId).length})</CardTitle>
+            {/* Projects */}
+            <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Projects ({getCustomerProjects(selectedCustomer.customerId).length})</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
+            <CardContent className="pt-0">
+              <div className="space-y-2">
                 {getCustomerProjects(selectedCustomer.customerId).map((project) => {
                   if (!project) return null
                   const projectSites = getProjectSites(project.sites)
                   return (
-                    <div key={project.projectId} className="bg-slate-950 p-4 rounded-lg">
-                      <div className="flex items-center justify-between mb-2">
-                        <p className="text-slate-200 font-medium">{project.name}</p>
-                        <Badge variant="outline">{projectSites.length} Sites</Badge>
+                    <div key={project.projectId} className="bg-slate-950 p-2 rounded">
+                      <div className="flex items-center justify-between mb-1">
+                        <p className="text-slate-200 font-medium text-sm">{project.name}</p>
+                        <Badge variant="outline" className="text-[10px]">{projectSites.length} Sites</Badge>
                       </div>
-                      <p className="text-slate-400 text-xs">Project ID: {project.projectId}</p>
-                      <div className="mt-3 flex flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-1 mt-1.5">
                         {projectSites.map((site) => (
                           <Button
                             key={site.siteId}
                             variant="outline"
                             size="sm"
                             onClick={() => setSelectedSite(site)}
-                            className="text-xs"
+                            className="text-[10px] h-6 px-2"
                           >
-                            <MapPin className="h-3 w-3 mr-1" />
+                            <MapPin className="h-2.5 w-2.5 mr-0.5" />
                             {site.name}
                           </Button>
                         ))}
@@ -266,93 +270,72 @@ export default function CustomerSiteManagement() {
             </CardContent>
           </Card>
 
-          {/* Sites */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MapPin className="h-5 w-5" />
+            {/* Sites */}
+            <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <MapPin className="h-4 w-4" />
                 Sites ({getCustomerSites(selectedCustomer.customerId).length})
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Site Name</TableHead>
-                    <TableHead>Location</TableHead>
-                    <TableHead>Devices</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {getCustomerSites(selectedCustomer.customerId).map((site) => {
-                    const devices = getSiteDevices(site.siteId)
-                    return (
-                      <TableRow
-                        key={site.siteId}
-                        className={selectedSite?.siteId === site.siteId ? 'bg-slate-800' : ''}
-                      >
-                        <TableCell className="font-medium">{site.name}</TableCell>
-                        <TableCell>
-                          <div className="text-xs">
-                            <p className="text-slate-300">{site.location.address}</p>
-                            {site.location.substation && (
-                              <p className="text-slate-500">{site.location.substation}</p>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{devices.length} devices</Badge>
-                        </TableCell>
-                        <TableCell>{getStatusBadge(site.status)}</TableCell>
-                        <TableCell>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => setSelectedSite(site)}
-                          >
-                            View Details
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    )
-                  })}
-                </TableBody>
-              </Table>
+            <CardContent className="pt-0">
+              <div className="space-y-1.5">
+                {getCustomerSites(selectedCustomer.customerId).map((site) => {
+                  const devices = getSiteDevices(site.siteId)
+                  return (
+                    <div
+                      key={site.siteId}
+                      className={`p-2 rounded border transition-colors cursor-pointer ${
+                        selectedSite?.siteId === site.siteId 
+                          ? 'bg-blue-950/30 border-blue-500' 
+                          : 'bg-slate-950 border-slate-800 hover:border-slate-700'
+                      }`}
+                      onClick={() => setSelectedSite(site)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <p className="text-slate-200 font-medium text-sm">{site.name}</p>
+                          <p className="text-slate-400 text-[10px] mt-0.5">{site.location.address}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="text-[10px]">{devices.length} dev</Badge>
+                          {getStatusBadge(site.status)}
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
             </CardContent>
           </Card>
 
-          {/* Selected Site Details */}
-          {selectedSite && (
-            <Card className="border-blue-500/50" id="selected-site">
-              <CardHeader>
+            {/* Selected Site Details */}
+            {selectedSite && (
+              <Card className="border-blue-500/50" id="selected-site">
+              <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    <MapPin className="h-5 w-5 text-blue-500" />
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <MapPin className="h-4 w-4 text-blue-500" />
                     {selectedSite.name}
                   </CardTitle>
                   {getStatusBadge(selectedSite.status)}
                 </div>
-                <CardDescription>Site ID: {selectedSite.siteId}</CardDescription>
+                <CardDescription className="text-xs">ID: {selectedSite.siteId}</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-3 pt-0">
                 {/* Location Details */}
-                <div className="bg-slate-950 p-4 rounded-lg">
-                  <p className="text-slate-400 text-sm mb-2">Location Details</p>
-                  <div className="space-y-1">
-                    <p className="text-slate-200 text-sm">{selectedSite.location.address}</p>
-                    <p className="text-slate-400 text-xs">GPS: {selectedSite.location.gpsCoordinates}</p>
-                    {selectedSite.location.substation && (
-                      <p className="text-slate-400 text-xs">Substation: {selectedSite.location.substation}</p>
-                    )}
-                  </div>
+                <div className="bg-slate-950 p-2 rounded">
+                  <p className="text-slate-400 text-xs mb-1">Location</p>
+                  <p className="text-slate-200 text-xs">{selectedSite.location.address}</p>
+                  {selectedSite.location.substation && (
+                    <p className="text-slate-400 text-[10px] mt-0.5">Substation: {selectedSite.location.substation}</p>
+                  )}
                 </div>
 
                 {/* Devices at Site */}
                 <div>
-                  <p className="text-slate-400 text-sm mb-3">Devices ({getSiteDevices(selectedSite.siteId).length})</p>
-                  <div className="space-y-3">
+                  <p className="text-slate-400 text-xs mb-2">Devices ({getSiteDevices(selectedSite.siteId).length})</p>
+                  <div className="space-y-2">
                     {getSiteDevices(selectedSite.siteId).map((device) => {
                       const deployments = getDeviceDeployments(device.deviceId)
                       const latestDeployment = deployments.length > 0 
@@ -360,69 +343,44 @@ export default function CustomerSiteManagement() {
                         : null
 
                       return (
-                        <div key={device.deviceId} className="bg-slate-950 p-4 rounded-lg border border-slate-800">
-                          <div className="flex items-start justify-between mb-3">
-                            <div>
-                              <div className="flex items-center gap-2 mb-1">
-                                <Package className="h-4 w-4 text-blue-500" />
-                                <p className="text-slate-200 font-medium">{device.model}</p>
+                        <div key={device.deviceId} className="bg-slate-950 p-2 rounded border border-slate-800">
+                          <div className="flex items-start justify-between mb-2">
+                            <div className="flex items-center gap-1.5">
+                              <Package className="h-3 w-3 text-blue-500" />
+                              <div>
+                                <p className="text-slate-200 font-medium text-xs">{device.model}</p>
+                                <p className="text-slate-400 text-[10px]">S/N: {device.serialNumber}</p>
                               </div>
-                              <p className="text-slate-400 text-xs">S/N: {device.serialNumber}</p>
                             </div>
-                            <Badge variant={device.status === 'Active' ? 'success' : 'outline'}>
+                            <Badge variant={device.status === 'Active' ? 'success' : 'outline'} className="text-[10px]">
                               {device.status}
                             </Badge>
                           </div>
 
-                          <div className="grid grid-cols-2 gap-3 text-xs mb-3">
+                          <div className="grid grid-cols-2 gap-1.5 text-[10px] mb-2">
                             <div>
-                              <p className="text-slate-500">Firmware Version</p>
+                              <p className="text-slate-500">Firmware</p>
                               <p className="text-slate-300">{device.currentFirmware}</p>
-                            </div>
-                            <div>
-                              <p className="text-slate-500">Hardware Revision</p>
-                              <p className="text-slate-300">{device.hardwareRevision}</p>
                             </div>
                             <div>
                               <p className="text-slate-500">Installed</p>
                               <p className="text-slate-300">{new Date(device.installDate).toLocaleDateString()}</p>
                             </div>
-                            <div>
-                              <p className="text-slate-500">Last Check-in</p>
-                              <p className="text-slate-300">{new Date(device.lastCheckIn).toLocaleDateString()}</p>
-                            </div>
                           </div>
 
                           {latestDeployment && (
-                            <div className="bg-blue-950/30 border border-blue-500/30 rounded p-3">
-                              <div className="flex items-center justify-between mb-2">
-                                <p className="text-blue-400 text-xs font-medium">Latest Deployment</p>
-                                <Badge variant={latestDeployment.pendingUpgrade ? 'warning' : 'success'} className="text-xs">
-                                  {latestDeployment.pendingUpgrade ? 'Upgrade Pending' : 'Current'}
+                            <div className="bg-blue-950/30 border border-blue-500/30 rounded p-1.5">
+                              <div className="flex items-center justify-between mb-1">
+                                <p className="text-blue-400 text-[10px] font-medium">Latest Deploy</p>
+                                <Badge variant={latestDeployment.pendingUpgrade ? 'warning' : 'success'} className="text-[9px] h-4">
+                                  {latestDeployment.pendingUpgrade ? 'Pending' : 'Current'}
                                 </Badge>
                               </div>
-                              <div className="grid grid-cols-2 gap-2 text-xs">
-                                <div>
-                                  <p className="text-slate-400">Release</p>
-                                  <p className="text-slate-200">{latestDeployment.releaseId}</p>
-                                </div>
-                                <div>
-                                  <p className="text-slate-400">Deployed</p>
-                                  <p className="text-slate-200">{new Date(latestDeployment.deploymentTimestamp).toLocaleDateString()}</p>
-                                </div>
-                                <div>
-                                  <p className="text-slate-400">Authorized By</p>
-                                  <p className="text-slate-200">{latestDeployment.authorizedBy.name}</p>
-                                </div>
-                                <div>
-                                  <p className="text-slate-400">Executed By</p>
-                                  <p className="text-slate-200">{latestDeployment.executedBy.name}</p>
-                                </div>
-                              </div>
+                              <p className="text-slate-300 text-[10px]">{new Date(latestDeployment.deploymentTimestamp).toLocaleDateString()} by {latestDeployment.executedBy.name}</p>
                               {latestDeployment.deploymentAnomalies.length > 0 && (
-                                <div className="mt-2 flex items-center gap-1 text-xs text-red-400">
-                                  <AlertTriangle className="h-3 w-3" />
-                                  {latestDeployment.deploymentAnomalies.length} anomalies detected
+                                <div className="mt-1 flex items-center gap-0.5 text-[10px] text-red-400">
+                                  <AlertTriangle className="h-2.5 w-2.5" />
+                                  {latestDeployment.deploymentAnomalies.length} anomalies
                                 </div>
                               )}
                             </div>
@@ -433,10 +391,11 @@ export default function CustomerSiteManagement() {
                   </div>
                 </div>
               </CardContent>
-            </Card>
-          )}
+              </Card>
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }

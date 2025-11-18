@@ -24,33 +24,32 @@ export default function AegisDashboard() {
         <div className="flex-1 lg:w-3/4 space-y-6">
           {/* Critical Alerts Widget */}
           <Card className="border-red-500/30 bg-red-950/30">
-            <CardHeader>
+            <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <AlertTriangle className="h-5 w-5 text-red-500" />
-                  <CardTitle>Critical Alerts</CardTitle>
+                  <AlertTriangle className="h-4 w-4 text-red-500" />
+                  <CardTitle className="text-base">Critical Alerts</CardTitle>
                 </div>
-                <Badge variant="destructive">{mockAlerts.filter(a => a.severity === 'critical').length} Critical</Badge>
+                <Badge variant="destructive" className="text-xs">{mockAlerts.filter(a => a.severity === 'critical').length} Critical</Badge>
               </div>
-              <CardDescription>Behavioral Monitoring & Security Events</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
+            <CardContent className="pt-0">
+              <div className="space-y-1.5">
                 {mockAlerts.map((alert) => {
                   const Icon = getSeverityIcon(alert.severity)
                   return (
                     <div
                       key={alert.id}
-                      className="bg-slate-900/50 border border-slate-800 rounded-lg p-4 flex items-start justify-between"
+                      className="bg-slate-900/50 border border-slate-800 rounded p-2 flex items-center justify-between"
                     >
-                      <div className="flex-1 flex items-start gap-3">
-                        <Icon className={`h-4 w-4 mt-0.5 ${getSeverityColor(alert.severity)}`} />
-                        <div className="flex-1">
-                          <p className="text-slate-100">{alert.type}</p>
-                          <p className="text-slate-400 text-sm mt-1">{alert.source}</p>
+                      <div className="flex items-center gap-2 flex-1">
+                        <Icon className={`h-3 w-3 ${getSeverityColor(alert.severity)}`} />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-slate-100 text-xs truncate">{alert.type}</p>
+                          <p className="text-slate-400 text-[10px] truncate">{alert.source}</p>
                         </div>
                       </div>
-                      <p className="text-slate-400 text-sm">{alert.timeAgo}</p>
+                      <p className="text-slate-400 text-[10px] ml-2 flex-shrink-0">{alert.timeAgo}</p>
                     </div>
                   )
                 })}
@@ -184,196 +183,171 @@ export default function AegisDashboard() {
             </Card>
           </div>
 
-          {/* Four Stat Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {/* Recent Activity - Side by Side */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Recent Releases */}
             <Card>
-              <CardContent className="p-6 flex items-center justify-between">
-                <div>
-                  <p className="text-slate-400 text-sm mb-1">Signed Firmware</p>
-                  <p className="text-green-500 text-2xl font-semibold">{summaryStats.signedFirmware.toLocaleString()}</p>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Package className="h-4 w-4 text-blue-500" />
+                    <CardTitle className="text-base">Recent Releases</CardTitle>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="h-7 text-xs"
+                    onClick={() => {
+                      window.dispatchEvent(new CustomEvent('navigate', { detail: 'releases' }))
+                    }}
+                  >
+                    View All
+                  </Button>
                 </div>
-                <CheckCircle2 className="h-6 w-6 text-green-500" />
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="space-y-2">
+                  {mockReleases.slice(0, 4).map((release) => (
+                    <div
+                      key={release.releaseId}
+                      className="bg-slate-900/50 border border-slate-800 rounded p-2"
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-1.5">
+                          <Badge variant="outline" className="text-[10px]">{release.version}</Badge>
+                          {release.recallStatus ? (
+                            <Badge variant="destructive" className="text-[10px]">Recalled</Badge>
+                          ) : (
+                            <Badge variant="success" className="text-[10px]">Active</Badge>
+                          )}
+                        </div>
+                        <Clock className="h-3 w-3 text-slate-500" />
+                      </div>
+                      <div className="flex items-center justify-between text-[10px] text-slate-400">
+                        <span>{release.deviceType}</span>
+                        <span>•</span>
+                        <span>{release.region}</span>
+                        <span>•</span>
+                        <span className="text-green-400 flex items-center gap-0.5">
+                          <CheckCircle className="h-2.5 w-2.5" />
+                          {release.signatures.length}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </CardContent>
             </Card>
 
+            {/* Recent Deployments */}
             <Card>
-              <CardContent className="p-6 flex items-center justify-between">
-                <div>
-                  <p className="text-slate-400 text-sm mb-1">Pending Approval</p>
-                  <p className="text-yellow-500 text-2xl font-semibold">{summaryStats.pendingApproval}</p>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Rocket className="h-4 w-4 text-purple-500" />
+                    <CardTitle className="text-base">Recent Deployments</CardTitle>
+                  </div>
+                  <Badge variant="secondary" className="text-[10px]">{mockDeployments.length}</Badge>
                 </div>
-                <Activity className="h-6 w-6 text-yellow-500" />
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-6 flex items-center justify-between">
-                <div>
-                  <p className="text-slate-400 text-sm mb-1">Active Customers</p>
-                  <p className="text-blue-500 text-2xl font-semibold">{summaryStats.activeCustomers}</p>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="space-y-2">
+                  {mockDeployments
+                    .sort((a, b) => new Date(b.deploymentTimestamp).getTime() - new Date(a.deploymentTimestamp).getTime())
+                    .slice(0, 4)
+                    .map((deployment) => {
+                      const customer = mockCustomers.find(c => c.customerId === deployment.customerId)
+                      const site = mockSites.find(s => s.siteId === deployment.siteId)
+                      const release = mockReleases.find(r => r.releaseId === deployment.releaseId)
+                      
+                      return (
+                        <div
+                          key={deployment.deploymentId}
+                          className="bg-slate-900/50 border border-slate-800 rounded p-2"
+                        >
+                          <div className="flex items-center justify-between mb-1">
+                            <p className="text-slate-200 font-medium text-xs truncate flex-1">{customer?.name}</p>
+                            {deployment.pendingUpgrade ? (
+                              <Badge variant="warning" className="text-[10px] ml-2">Pending</Badge>
+                            ) : deployment.deploymentAnomalies.length > 0 ? (
+                              <Badge variant="destructive" className="text-[10px] ml-2">Issues</Badge>
+                            ) : (
+                              <Badge variant="success" className="text-[10px] ml-2">Active</Badge>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2 text-[10px] text-slate-400">
+                            <MapPin className="h-2.5 w-2.5" />
+                            <span className="truncate flex-1">{site?.name}</span>
+                            <span>•</span>
+                            <span>{release?.version}</span>
+                            <span>•</span>
+                            <span>{deployment.unitsDeployed}u</span>
+                          </div>
+                          {deployment.deploymentAnomalies.length > 0 && (
+                            <div className="bg-red-950/30 border border-red-500/30 rounded p-1 mt-1">
+                              <p className="text-red-400 text-[10px] flex items-center gap-0.5">
+                                <AlertTriangle className="h-2.5 w-2.5" />
+                                {deployment.deploymentAnomalies.length} anomalies
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
                 </div>
-                <Users className="h-6 w-6 text-blue-500" />
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-6 flex items-center justify-between">
-                <div>
-                  <p className="text-slate-400 text-sm mb-1">Security Alerts</p>
-                  <p className="text-red-500 text-2xl font-semibold">{summaryStats.securityAlerts}</p>
-                </div>
-                <AlertTriangle className="h-6 w-6 text-red-500" />
               </CardContent>
             </Card>
           </div>
-
-          {/* Recent Releases */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Package className="h-5 w-5 text-blue-500" />
-                  <CardTitle>Recent Releases</CardTitle>
-                </div>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => {
-                    window.dispatchEvent(new CustomEvent('navigate', { detail: 'releases' }))
-                  }}
-                >
-                  View All
-                </Button>
-              </div>
-              <CardDescription>Latest firmware releases and status</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {mockReleases.slice(0, 5).map((release) => (
-                  <div
-                    key={release.releaseId}
-                    className="bg-slate-900/50 border border-slate-800 rounded-lg p-4"
-                  >
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <Badge variant="outline">{release.version}</Badge>
-                          {release.recallStatus ? (
-                            <Badge variant="destructive">Recalled</Badge>
-                          ) : (
-                            <Badge variant="success">Active</Badge>
-                          )}
-                        </div>
-                        <p className="text-slate-400 text-xs">{release.releaseId}</p>
-                      </div>
-                      <Clock className="h-4 w-4 text-slate-500" />
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 text-xs">
-                      <div>
-                        <p className="text-slate-500">Device Type</p>
-                        <p className="text-slate-300">{release.deviceType}</p>
-                      </div>
-                      <div>
-                        <p className="text-slate-500">Region</p>
-                        <p className="text-slate-300">{release.region}</p>
-                      </div>
-                      <div>
-                        <p className="text-slate-500">Created</p>
-                        <p className="text-slate-300">{new Date(release.createdAt).toLocaleDateString()}</p>
-                      </div>
-                      <div>
-                        <p className="text-slate-500">Signatures</p>
-                        <p className="text-green-400 flex items-center gap-1">
-                          <CheckCircle className="h-3 w-3" />
-                          {release.signatures.length}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Recent Deployments */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Rocket className="h-5 w-5 text-purple-500" />
-                  <CardTitle>Recent Deployments</CardTitle>
-                </div>
-                <Badge variant="secondary">{mockDeployments.length} Total</Badge>
-              </div>
-              <CardDescription>Latest firmware deployments to sites</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {mockDeployments
-                  .sort((a, b) => new Date(b.deploymentTimestamp).getTime() - new Date(a.deploymentTimestamp).getTime())
-                  .slice(0, 5)
-                  .map((deployment) => {
-                    const customer = mockCustomers.find(c => c.customerId === deployment.customerId)
-                    const site = mockSites.find(s => s.siteId === deployment.siteId)
-                    const release = mockReleases.find(r => r.releaseId === deployment.releaseId)
-                    
-                    return (
-                      <div
-                        key={deployment.deploymentId}
-                        className="bg-slate-900/50 border border-slate-800 rounded-lg p-4"
-                      >
-                        <div className="flex items-start justify-between mb-2">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <p className="text-slate-200 font-medium">{customer?.name}</p>
-                              {deployment.pendingUpgrade ? (
-                                <Badge variant="warning">Pending Upgrade</Badge>
-                              ) : (
-                                <Badge variant="success">Active</Badge>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-1 text-xs text-slate-400">
-                              <MapPin className="h-3 w-3" />
-                              {site?.name}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2 text-xs mb-2">
-                          <div>
-                            <p className="text-slate-500">Release</p>
-                            <p className="text-slate-300">{release?.version}</p>
-                          </div>
-                          <div>
-                            <p className="text-slate-500">Units</p>
-                            <p className="text-slate-300">{deployment.unitsDeployed}</p>
-                          </div>
-                          <div>
-                            <p className="text-slate-500">Deployed</p>
-                            <p className="text-slate-300">{new Date(deployment.deploymentTimestamp).toLocaleDateString()}</p>
-                          </div>
-                          <div>
-                            <p className="text-slate-500">By</p>
-                            <p className="text-slate-300">{deployment.executedBy.name}</p>
-                          </div>
-                        </div>
-                        {deployment.deploymentAnomalies.length > 0 && (
-                          <div className="bg-red-950/30 border border-red-500/30 rounded p-2">
-                            <p className="text-red-400 text-xs flex items-center gap-1">
-                              <AlertTriangle className="h-3 w-3" />
-                              {deployment.deploymentAnomalies.length} anomalies detected
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    )
-                  })}
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
         {/* Right Sidebar - 1/4 width on desktop */}
         <div className="lg:w-1/4 space-y-4">
+          {/* Quick Stats - 2x2 Grid */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm">Quick Stats</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="grid grid-cols-2 gap-2">
+                {/* Signed Firmware */}
+                <div className="bg-slate-900/50 p-3 rounded-lg border border-slate-800">
+                  <div className="flex items-center justify-between mb-1">
+                    <CheckCircle2 className="h-4 w-4 text-green-500" />
+                  </div>
+                  <p className="text-slate-400 text-[10px] mb-0.5">Signed FW</p>
+                  <p className="text-green-500 text-lg font-semibold">{summaryStats.signedFirmware.toLocaleString()}</p>
+                </div>
+
+                {/* Pending Approval */}
+                <div className="bg-slate-900/50 p-3 rounded-lg border border-slate-800">
+                  <div className="flex items-center justify-between mb-1">
+                    <Activity className="h-4 w-4 text-yellow-500" />
+                  </div>
+                  <p className="text-slate-400 text-[10px] mb-0.5">Pending</p>
+                  <p className="text-yellow-500 text-lg font-semibold">{summaryStats.pendingApproval}</p>
+                </div>
+
+                {/* Active Customers */}
+                <div className="bg-slate-900/50 p-3 rounded-lg border border-slate-800">
+                  <div className="flex items-center justify-between mb-1">
+                    <Users className="h-4 w-4 text-blue-500" />
+                  </div>
+                  <p className="text-slate-400 text-[10px] mb-0.5">Customers</p>
+                  <p className="text-blue-500 text-lg font-semibold">{summaryStats.activeCustomers}</p>
+                </div>
+
+                {/* Security Alerts */}
+                <div className="bg-slate-900/50 p-3 rounded-lg border border-slate-800">
+                  <div className="flex items-center justify-between mb-1">
+                    <AlertTriangle className="h-4 w-4 text-red-500" />
+                  </div>
+                  <p className="text-slate-400 text-[10px] mb-0.5">Alerts</p>
+                  <p className="text-red-500 text-lg font-semibold">{summaryStats.securityAlerts}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           <ChainOfCustodySidebar />
         </div>
       </div>

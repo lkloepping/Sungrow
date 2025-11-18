@@ -15,7 +15,7 @@ export default function SiteMapWrapper(props: SiteMapWrapperProps) {
   return (
     <Suspense
       fallback={
-        <div className="w-full h-[600px] rounded-lg border border-slate-800 bg-slate-900/50 flex items-center justify-center">
+        <div className="w-full h-[500px] rounded-lg border border-slate-800 bg-slate-900/50 flex items-center justify-center">
           <div className="text-center">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
             <p className="text-slate-400">Loading map...</p>
@@ -47,7 +47,7 @@ class ErrorBoundary extends React.Component<
   render() {
     if (this.state.hasError) {
       return (
-        <div className="w-full h-[600px] rounded-lg border border-red-500/30 bg-red-950/20 flex items-center justify-center p-8">
+        <div className="w-full h-[500px] rounded-lg border border-red-500/30 bg-red-950/20 flex items-center justify-center p-8">
           <div className="text-center max-w-md">
             <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
             <h3 className="text-slate-200 font-semibold mb-2">Map Loading Error</h3>

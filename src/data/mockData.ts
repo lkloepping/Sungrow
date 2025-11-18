@@ -23,6 +23,27 @@ export interface Contractor {
   contractorId: string;
   companyName: string;
   contractValidity: boolean;
+  regions: string[];
+  capabilities: string[];
+  contactEmail: string;
+}
+
+export interface ScheduledUpdate {
+  updateId: string;
+  siteId: string;
+  currentFirmware: string;
+  targetFirmware: string;
+  scheduledDate: string;
+  priority: 'Critical' | 'High' | 'Medium' | 'Low';
+  region: string;
+  route?: string;
+  assignedTo: 'Internal' | 'Vendor1' | 'Vendor2' | 'Unassigned';
+  assignedTeam?: Team;
+  assignedContractor?: Contractor;
+  estimatedDuration: number; // hours
+  requiresDowntime: boolean;
+  status: 'Scheduled' | 'In Progress' | 'Completed' | 'Delayed';
+  dependencies?: string[]; // other updateIds
 }
 
 export interface Location {
@@ -784,3 +805,106 @@ export const summaryStats = {
   activeCVEs: 3,
   impactedDevices: 127
 };
+
+// Contractors/Vendors
+export const mockContractors: Contractor[] = [
+  {
+    contractorId: 'VENDOR001',
+    companyName: 'TechField Services Inc.',
+    contractValidity: true,
+    regions: ['Northeast', 'Midwest'],
+    capabilities: ['Firmware Updates', 'Hardware Installation', 'Site Commissioning'],
+    contactEmail: 'dispatch@techfield.com'
+  },
+  {
+    contractorId: 'VENDOR002',
+    companyName: 'PowerGrid Solutions LLC',
+    contractValidity: true,
+    regions: ['West Coast', 'Southwest'],
+    capabilities: ['Firmware Updates', 'Emergency Response', 'Compliance Testing'],
+    contactEmail: 'ops@powergrid-solutions.com'
+  }
+];
+
+// Scheduled Updates (sites needing updates in next 30 days)
+export const mockScheduledUpdates: ScheduledUpdate[] = [
+  {
+    updateId: 'UPD001',
+    siteId: 'SITE001',
+    currentFirmware: 'v2.6.2',
+    targetFirmware: 'v2.8.1',
+    scheduledDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days from now
+    priority: 'Critical',
+    region: 'Northeast',
+    route: 'Route A - NYC Metro',
+    assignedTo: 'Vendor1',
+    assignedContractor: mockContractors[0],
+    estimatedDuration: 4,
+    requiresDowntime: true,
+    status: 'Scheduled',
+    dependencies: []
+  },
+  {
+    updateId: 'UPD002',
+    siteId: 'SITE002',
+    currentFirmware: 'v2.7.4',
+    targetFirmware: 'v2.8.1',
+    scheduledDate: new Date(Date.now() + 8 * 24 * 60 * 60 * 1000).toISOString(), // 8 days from now
+    priority: 'High',
+    region: 'West Coast',
+    route: 'Route B - Bay Area',
+    assignedTo: 'Vendor2',
+    assignedContractor: mockContractors[1],
+    estimatedDuration: 3,
+    requiresDowntime: false,
+    status: 'Scheduled',
+    dependencies: []
+  },
+  {
+    updateId: 'UPD003',
+    siteId: 'SITE004',
+    currentFirmware: 'v2.7.5',
+    targetFirmware: 'v2.8.1',
+    scheduledDate: new Date(Date.now() + 12 * 24 * 60 * 60 * 1000).toISOString(), // 12 days from now
+    priority: 'Medium',
+    region: 'Northeast',
+    route: 'Route A - NYC Metro',
+    assignedTo: 'Internal',
+    assignedTeam: mockTeams[2],
+    estimatedDuration: 2,
+    requiresDowntime: false,
+    status: 'Scheduled',
+    dependencies: ['UPD001']
+  },
+  {
+    updateId: 'UPD004',
+    siteId: 'SITE005',
+    currentFirmware: 'v2.6.2',
+    targetFirmware: 'v2.8.1',
+    scheduledDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(), // 15 days from now
+    priority: 'Critical',
+    region: 'West Coast',
+    route: 'Route C - Seattle',
+    assignedTo: 'Vendor2',
+    assignedContractor: mockContractors[1],
+    estimatedDuration: 5,
+    requiresDowntime: true,
+    status: 'Scheduled',
+    dependencies: []
+  },
+  {
+    updateId: 'UPD005',
+    siteId: 'SITE006',
+    currentFirmware: 'v2.8.1',
+    targetFirmware: 'v2.8.1',
+    scheduledDate: new Date(Date.now() + 25 * 24 * 60 * 60 * 1000).toISOString(), // 25 days from now
+    priority: 'Low',
+    region: 'Southwest',
+    route: 'Route D - Texas',
+    assignedTo: 'Unassigned',
+    estimatedDuration: 2,
+    requiresDowntime: false,
+    status: 'Scheduled',
+    dependencies: []
+  }
+];
