@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import * as React from 'react'
-import { Shield, AlertTriangle, FileCheck, Moon, Sun } from 'lucide-react'
+import { Shield, AlertTriangle, FileCheck, Moon, Sun, Package, Users } from 'lucide-react'
 import AegisDashboard from './components/aegis-dashboard'
 import VulnerabilityAnalysis from './components/vulnerability-analysis'
 import AuditReportGenerator from './components/audit-report-generator'
+import ReleaseManagement from './components/release-management'
+import CustomerSiteManagement from './components/customer-site-management'
 
-type Screen = 'dashboard' | 'vulnerability' | 'audit'
+type Screen = 'dashboard' | 'releases' | 'customers' | 'vulnerability' | 'audit'
 
 function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('dashboard')
@@ -15,7 +17,7 @@ function App() {
   React.useEffect(() => {
     const handleNavigate = (event: CustomEvent) => {
       const screen = event.detail as Screen
-      if (['dashboard', 'vulnerability', 'audit'].includes(screen)) {
+      if (['dashboard', 'releases', 'customers', 'vulnerability', 'audit'].includes(screen)) {
         setCurrentScreen(screen)
       }
     }
@@ -28,6 +30,8 @@ function App() {
 
   const navigation = [
     { id: 'dashboard' as Screen, label: 'Dashboard', icon: Shield },
+    { id: 'releases' as Screen, label: 'Release Management', icon: Package },
+    { id: 'customers' as Screen, label: 'Customers & Sites', icon: Users },
     { id: 'vulnerability' as Screen, label: 'Vulnerability Analysis', icon: AlertTriangle },
     { id: 'audit' as Screen, label: 'Audit Reports', icon: FileCheck },
   ]
@@ -110,6 +114,8 @@ function App() {
         {/* Main Content */}
         <main className="max-w-[1920px] mx-auto">
           {currentScreen === 'dashboard' && <AegisDashboard />}
+          {currentScreen === 'releases' && <ReleaseManagement />}
+          {currentScreen === 'customers' && <CustomerSiteManagement />}
           {currentScreen === 'vulnerability' && <VulnerabilityAnalysis />}
           {currentScreen === 'audit' && <AuditReportGenerator />}
         </main>

@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { FileCheck, Download, Calendar, Share2, Package, FlaskConical, KeyRound, Rocket, CheckCircle, ArrowRight } from 'lucide-react'
+import { FileCheck, Download, Calendar, Share2, Package, FlaskConical, KeyRound, Rocket, CheckCircle, ArrowRight, MapPin, Users, Shield, AlertTriangle } from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Select } from '@/components/ui/select'
-import { chainOfCustodyPhases } from '@/data/mockData'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { chainOfCustodyPhases, mockDeployments, mockComplianceRecords, mockCustomers, mockSites, mockReleases } from '@/data/mockData'
 import { ChainOfCustodyPhase } from '@/data/mockData'
 
 const phaseIcons = {
@@ -243,6 +244,168 @@ export default function AuditReportGenerator() {
         </Card>
       </div>
 
+      {/* Deployment History */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Rocket className="h-5 w-5" />
+                Deployment History
+              </CardTitle>
+              <CardDescription>Recent firmware deployments with audit trail</CardDescription>
+            </div>
+            <Badge variant="secondary">{mockDeployments.length} Total</Badge>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Deployment ID</TableHead>
+                <TableHead>Customer</TableHead>
+                <TableHead>Site</TableHead>
+                <TableHead>Release</TableHead>
+                <TableHead>Units</TableHead>
+                <TableHead>Timestamp</TableHead>
+                <TableHead>Authorized By</TableHead>
+                <TableHead>Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {mockDeployments
+                .sort((a, b) => new Date(b.deploymentTimestamp).getTime() - new Date(a.deploymentTimestamp).getTime())
+                .slice(0, 10)
+                .map((deployment) => {
+                  const customer = mockCustomers.find(c => c.customerId === deployment.customerId)
+                  const site = mockSites.find(s => s.siteId === deployment.siteId)
+                  const release = mockReleases.find(r => r.releaseId === deployment.releaseId)
+                  
+                  return (
+                    <TableRow key={deployment.deploymentId}>
+                      <TableCell className="font-medium text-xs">{deployment.deploymentId}</TableCell>
+                      <TableCell>{customer?.name}</TableCell>
+                      <TableCell>{site?.name}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{release?.version}</Badge>
+                      </TableCell>
+                      <TableCell>{deployment.unitsDeployed}</TableCell>
+                      <TableCell className="text-xs text-slate-400">
+                        {new Date(deployment.deploymentTimestamp).toLocaleString()}
+                      </TableCell>
+                      <TableCell className="text-sm">{deployment.authorizedBy.name}</TableCell>
+                      <TableCell>
+                        {deployment.pendingUpgrade ? (
+                          <Badge variant="warning">Pending Upgrade</Badge>
+                        ) : deployment.deploymentAnomalies.length > 0 ? (
+                          <Badge variant="destructive">Has Anomalies</Badge>
+                        ) : (
+                          <Badge variant="success">Complete</Badge>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      {/* Compliance Records */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5" />
+                Compliance Evidence
+              </CardTitle>
+              <CardDescription>Regulatory compliance documentation and evidence</CardDescription>
+            </div>
+            <Badge variant="success">{mockComplianceRecords.length} Records</Badge>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {mockComplianceRecords.map((record) => (
+              <div key={record.recordId} className="bg-slate-900/50 border border-slate-800 rounded-lg p-4">
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <Badge variant="outline">{record.type}</Badge>
+                      <Badge variant="success">Compliant</Badge>
+                    </div>
+                    <p className="text-slate-400 text-xs">Record ID: {record.recordId}</p>
+                  </div>
+                  <CheckCircle className="h-5 w-5 text-green-500" />
+                </div>
+                <div className="space-y-2">
+                  <div>
+                    <p className="text-slate-400 text-sm mb-1">Evidence</p>
+                    <p className="text-slate-300 text-sm">{record.evidence}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Deployment Anomalies */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5 text-yellow-500" />
+            Deployment Anomalies
+          </CardTitle>
+          <CardDescription>Detected anomalies during deployments requiring review</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {mockDeployments
+              .filter(d => d.deploymentAnomalies.length > 0)
+              .map((deployment) => {
+                const customer = mockCustomers.find(c => c.customerId === deployment.customerId)
+                const site = mockSites.find(s => s.siteId === deployment.siteId)
+                
+                return (
+                  <div key={deployment.deploymentId} className="bg-yellow-950/30 border border-yellow-500/30 rounded-lg p-4">
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <p className="text-slate-200 font-medium">{customer?.name} - {site?.name}</p>
+                        <p className="text-slate-400 text-xs">Deployment: {deployment.deploymentId}</p>
+                        <p className="text-slate-400 text-xs">{new Date(deployment.deploymentTimestamp).toLocaleString()}</p>
+                      </div>
+                      <Badge variant="warning">{deployment.deploymentAnomalies.length} Anomalies</Badge>
+                    </div>
+                    <div className="space-y-2">
+                      {deployment.deploymentAnomalies.map((anomaly) => (
+                        <div key={anomaly.anomalyId} className="bg-slate-950 p-3 rounded">
+                          <div className="flex items-start gap-2 mb-2">
+                            <AlertTriangle className="h-4 w-4 text-yellow-500 mt-0.5" />
+                            <div className="flex-1">
+                              <p className="text-slate-200 text-sm">{anomaly.description}</p>
+                              <p className="text-slate-400 text-xs mt-1">Detected by: {anomaly.detectedBy.name}</p>
+                              <p className="text-slate-500 text-xs">{new Date(anomaly.timestamp).toLocaleString()}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )
+              })}
+            {mockDeployments.filter(d => d.deploymentAnomalies.length > 0).length === 0 && (
+              <div className="bg-green-950/30 border border-green-500/30 rounded-lg p-4 text-center">
+                <CheckCircle className="h-8 w-8 text-green-500 mx-auto mb-2" />
+                <p className="text-green-400 text-sm font-medium">No Anomalies Detected</p>
+                <p className="text-slate-400 text-xs mt-1">All deployments completed successfully</p>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Report Preview */}
       <Card>
         <CardHeader>
@@ -250,18 +413,24 @@ export default function AuditReportGenerator() {
           <CardDescription>Summary statistics and key findings</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <div className="p-4 bg-slate-900/50 rounded-lg">
-              <p className="text-slate-400 text-sm mb-1">Total Devices</p>
-              <p className="text-2xl font-semibold text-slate-50">1,847</p>
+              <p className="text-slate-400 text-sm mb-1">Total Deployments</p>
+              <p className="text-2xl font-semibold text-slate-50">{mockDeployments.length}</p>
             </div>
             <div className="p-4 bg-slate-900/50 rounded-lg">
-              <p className="text-slate-400 text-sm mb-1">Compliance Score</p>
-              <p className="text-2xl font-semibold text-green-500">87.5%</p>
+              <p className="text-slate-400 text-sm mb-1">Compliance Records</p>
+              <p className="text-2xl font-semibold text-green-500">{mockComplianceRecords.length}</p>
             </div>
             <div className="p-4 bg-slate-900/50 rounded-lg">
               <p className="text-slate-400 text-sm mb-1">Verified Phases</p>
               <p className="text-2xl font-semibold text-blue-500">4/4</p>
+            </div>
+            <div className="p-4 bg-slate-900/50 rounded-lg">
+              <p className="text-slate-400 text-sm mb-1">Anomalies Detected</p>
+              <p className="text-2xl font-semibold text-yellow-500">
+                {mockDeployments.filter(d => d.deploymentAnomalies.length > 0).length}
+              </p>
             </div>
           </div>
           <div className="p-4 bg-green-950/30 border border-green-500/30 rounded-lg">
@@ -270,7 +439,8 @@ export default function AuditReportGenerator() {
               <div>
                 <p className="text-slate-50 font-semibold mb-1">Compliance Status: PASSED</p>
                 <p className="text-slate-300 text-sm">
-                  All devices are 100% compliant with regulatory constraints. Chain of Custody verification is complete and valid.
+                  All deployments are tracked with complete audit trails. Chain of Custody verification is complete and valid. 
+                  {mockComplianceRecords.length} compliance records documented across {mockDeployments.length} deployments.
                 </p>
               </div>
             </div>
