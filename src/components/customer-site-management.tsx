@@ -4,8 +4,8 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { mockCustomers, mockDevices, mockDeployments, Customer, Site, Device, mockSites } from '@/data/mockData'
-import SiteMap from './site-map'
+import { mockCustomers, mockDevices, mockDeployments, Customer, Site, Device, mockSites, mockProjects } from '@/data/mockData'
+import SiteMapWrapper from './site-map-wrapper'
 
 export default function CustomerSiteManagement() {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer>(mockCustomers[0])
@@ -17,7 +17,24 @@ export default function CustomerSiteManagement() {
 
   const getCustomerSiteCount = (customerId: string) => {
     const customer = mockCustomers.find(c => c.customerId === customerId)
-    return customer?.sites.length || 0
+    return Array.isArray(customer?.sites) ? customer.sites.length : 0
+  }
+
+  const getCustomerProjects = (customerId: string) => {
+    const customer = mockCustomers.find(c => c.customerId === customerId)
+    if (!customer || !Array.isArray(customer.projects)) return []
+    return customer.projects.map(projectId => mockProjects.find(p => p.projectId === projectId)).filter(Boolean)
+  }
+
+  const getCustomerSites = (customerId: string) => {
+    const customer = mockCustomers.find(c => c.customerId === customerId)
+    if (!customer || !Array.isArray(customer.sites)) return []
+    return customer.sites.map(siteId => mockSites.find(s => s.siteId === siteId)).filter(Boolean)
+  }
+
+  const getProjectSites = (projectSiteIds: string[]) => {
+    if (!Array.isArray(projectSiteIds)) return []
+    return projectSiteIds.map(siteId => mockSites.find(s => s.siteId === siteId)).filter(Boolean)
   }
 
   const getSiteDevices = (siteId: string) => {
@@ -68,7 +85,7 @@ export default function CustomerSiteManagement() {
           </div>
         </CardHeader>
         <CardContent>
-          <SiteMap 
+          <SiteMapWrapper 
             sites={allSites} 
             customers={mockCustomers}
             onSiteClick={(site) => {
@@ -126,7 +143,7 @@ export default function CustomerSiteManagement() {
                     </div>
                   </div>
                   <div className="mt-2">
-                    <p className="text-slate-500 text-xs">Projects: {customer.projects.length}</p>
+                    <p className="text-slate-500 text-xs">Projects: {Array.isArray(customer.projects) ? customer.projects.length : 0}</p>
                   </div>
                 </button>
               ))}
@@ -164,7 +181,7 @@ export default function CustomerSiteManagement() {
                 </div>
                 <div className="bg-slate-950 p-4 rounded-lg">
                   <p className="text-slate-400 text-sm mb-1">Projects</p>
-                  <p className="text-2xl font-semibold text-slate-50">{selectedCustomer.projects.length}</p>
+                  <p className="text-2xl font-semibold text-slate-50">{Array.isArray(selectedCustomer.projects) ? selectedCustomer.projects.length : 0}</p>
                 </div>
               </div>
 
@@ -214,33 +231,37 @@ export default function CustomerSiteManagement() {
           {/* Projects */}
           <Card>
             <CardHeader>
-              <CardTitle>Projects ({selectedCustomer.projects.length})</CardTitle>
+              <CardTitle>Projects ({getCustomerProjects(selectedCustomer.customerId).length})</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {selectedCustomer.projects.map((project) => (
-                  <div key={project.projectId} className="bg-slate-950 p-4 rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <p className="text-slate-200 font-medium">{project.name}</p>
-                      <Badge variant="outline">{project.sites.length} Sites</Badge>
+                {getCustomerProjects(selectedCustomer.customerId).map((project) => {
+                  if (!project) return null
+                  const projectSites = getProjectSites(project.sites)
+                  return (
+                    <div key={project.projectId} className="bg-slate-950 p-4 rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-slate-200 font-medium">{project.name}</p>
+                        <Badge variant="outline">{projectSites.length} Sites</Badge>
+                      </div>
+                      <p className="text-slate-400 text-xs">Project ID: {project.projectId}</p>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {projectSites.map((site) => (
+                          <Button
+                            key={site.siteId}
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setSelectedSite(site)}
+                            className="text-xs"
+                          >
+                            <MapPin className="h-3 w-3 mr-1" />
+                            {site.name}
+                          </Button>
+                        ))}
+                      </div>
                     </div>
-                    <p className="text-slate-400 text-xs">Project ID: {project.projectId}</p>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {project.sites.map((site) => (
-                        <Button
-                          key={site.siteId}
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setSelectedSite(site)}
-                          className="text-xs"
-                        >
-                          <MapPin className="h-3 w-3 mr-1" />
-                          {site.name}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </CardContent>
           </Card>
@@ -250,7 +271,7 @@ export default function CustomerSiteManagement() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <MapPin className="h-5 w-5" />
-                Sites ({selectedCustomer.sites.length})
+                Sites ({getCustomerSites(selectedCustomer.customerId).length})
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -265,7 +286,7 @@ export default function CustomerSiteManagement() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {selectedCustomer.sites.map((site) => {
+                  {getCustomerSites(selectedCustomer.customerId).map((site) => {
                     const devices = getSiteDevices(site.siteId)
                     return (
                       <TableRow

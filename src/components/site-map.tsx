@@ -6,19 +6,6 @@ import { Site, Customer } from '@/data/mockData'
 import { Badge } from '@/components/ui/badge'
 import { MapPin, Package, AlertTriangle } from 'lucide-react'
 
-// Fix for default marker icons in Leaflet with Webpack/Vite
-import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
-import markerIcon from 'leaflet/dist/images/marker-icon.png'
-import markerShadow from 'leaflet/dist/images/marker-shadow.png'
-
-// @ts-ignore
-delete L.Icon.Default.prototype._getIconUrl
-L.Icon.Default.mergeOptions({
-  iconUrl: markerIcon,
-  iconRetinaUrl: markerIcon2x,
-  shadowUrl: markerShadow,
-})
-
 interface SiteMapProps {
   sites: Site[]
   customers: Customer[]
@@ -47,29 +34,34 @@ function FitBounds({ sites }: { sites: Site[] }) {
 
 export default function SiteMap({ sites, customers, onSiteClick }: SiteMapProps) {
   // Create custom icons based on site status
-  const createCustomIcon = (status: string) => {
-    const color = 
-      status === 'Up-to-date' ? '#10B981' : 
-      status === 'Outdated' ? '#EF4444' : 
-      '#F59E0B'
-    
-    return L.divIcon({
-      className: 'custom-marker',
-      html: `
-        <div style="
-          background-color: ${color};
-          width: 24px;
-          height: 24px;
-          border-radius: 50%;
-          border: 3px solid white;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-        "></div>
-      `,
-      iconSize: [24, 24],
-      iconAnchor: [12, 12],
-      popupAnchor: [0, -12],
-    })
-  }
+  const createCustomIcon = useMemo(() => {
+    return (status: string) => {
+      const color = 
+        status === 'Up-to-date' ? '#10B981' : 
+        status === 'Outdated' ? '#EF4444' : 
+        '#F59E0B'
+      
+      return L.divIcon({
+        className: 'custom-marker',
+        html: `
+          <div style="
+            background-color: ${color};
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          "></div>
+        `,
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
+        popupAnchor: [0, -14],
+      })
+    }
+  }, [])
 
   // Default center of US
   const defaultCenter: [number, number] = [39.8283, -98.5795]
@@ -157,7 +149,7 @@ export default function SiteMap({ sites, customers, onSiteClick }: SiteMapProps)
                     )}
                     <div className="flex items-center gap-1 pt-1">
                       <Package className="h-3 w-3" />
-                      <span className="font-medium">{site.devices.length} devices</span>
+                      <span className="font-medium">{Array.isArray(site.devices) ? site.devices.length : 0} devices</span>
                     </div>
                   </div>
                 </div>
@@ -194,12 +186,12 @@ export default function SiteMap({ sites, customers, onSiteClick }: SiteMapProps)
             <p className="text-slate-50 text-lg font-semibold">{sites.length}</p>
           </div>
           <div className="h-8 w-px bg-slate-700"></div>
-          <div>
-            <p className="text-slate-400 text-xs">Total Devices</p>
-            <p className="text-slate-50 text-lg font-semibold">
-              {sites.reduce((sum, site) => sum + site.devices.length, 0)}
-            </p>
-          </div>
+            <div>
+              <p className="text-slate-400 text-xs">Total Devices</p>
+              <p className="text-slate-50 text-lg font-semibold">
+                {sites.reduce((sum, site) => sum + (Array.isArray(site.devices) ? site.devices.length : 0), 0)}
+              </p>
+            </div>
         </div>
       </div>
     </div>
